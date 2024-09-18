@@ -1,0 +1,61 @@
+
+stages:
+  - build
+  - style_test
+  - tests
+  - deploy
+
+build:
+  stage: build
+  tags: 
+  - build
+  script:
+    - cd src/cat
+    - make
+    - if [ $? -ne 0 ]; then exit 1; fi
+    - cd ../grep
+    - make
+    - if [ $? -ne 0 ]; then exit 1; fi
+  artifacts:
+      paths:
+        - src/cat/s21_cat
+        - src/grep/s21_grep
+      expire_in: 30 days
+  after_script:
+    - sh src/ci_telegram.sh "build"
+
+style_test:
+  stage: style_test
+  tags: 
+    - style
+  script:
+    - sh src/ci_clang_tests.sh
+  when: on_success
+  after_script:
+    - sh src/ci_telegram.sh "style_test"
+
+tests:
+  stage: tests
+  tags:
+    - test
+  script:
+    - cd src/cat
+    - make test
+    - cd ../grep
+    - make test
+  when: on_success
+  after_script:
+    - sh src/ci_telegram.sh "test"
+
+deploy:
+  stage: deploy
+  tags:
+  - deploy
+  script:
+    - whoami
+    - chmod 777 src/cd_deploy.sh
+    - sh src/cd_deploy.sh
+  when: manual
+  after_script:
+    - sh src/ci_telegram.sh "deploy"
+
