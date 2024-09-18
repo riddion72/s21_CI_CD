@@ -1,0 +1,35 @@
+testing()
+{
+    t=$(echo $@ | sed "s/FLAG/$var/")  #  @ все аргументы переданыне скрипту, sed заменяет FLAG тем что находится в $var
+    ./s21_cat $t > test_s21_cat.log
+    cat $t > test_sys_cat.log
+    DIFFERENS="$(diff -s test_s21_cat.log test_sys_cat.log)"  #  diff сравнивает файлы, флаг -s для вывода текста что они схожи
+    (( COUNTER++ ))
+    if [ "$DIFFERENS" == "Files test_s21_cat.log and test_sys_cat.log are identical" ]  # вот эту надпись выдает -s если схожи
+    then
+      (( SUCCESS++ ))
+    else
+      (( FAIL++ ))
+    fi
+    echo "fail = $FAIL / succes = $SUCCESS ( $COUNTER ) cat $t"
+}
+
+# придуманые тесты
+for i in "${extra[@]}"
+do
+    testing $i
+done
+
+echo "-- 1 --"
+
+# 1 параметр
+for var1 in b e n s t v
+do
+    for i in "${tests[@]}"
+    do
+        var="-$var1"
+        testing $i
+    done
+done
+
+echo "-- 2 --"
